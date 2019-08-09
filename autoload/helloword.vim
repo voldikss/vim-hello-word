@@ -126,14 +126,15 @@ function! s:PinXieTi(db)
     else
       echohl WarningMsg
       echo repeat(' ', 25-len(spell)) . "❌"
-      echo "答案：" . selectchosen_word      echohl None
+      echo "答案：" . chosen_word      
+      echohl None
       call add(g:helloword_failed_words, chosen_word)
     endif
   endwhile
 endfunction
 
 function! helloword#Export() abort
-  if exists('g:failed_words') && len(g:helloword_failed_words) > 0
+  if exists('g:helloword_failed_words') && len(g:helloword_failed_words) > 0
     tabnew helloword.json
     call append(0, '{')
     for i in range(len(g:helloword_failed_words))
