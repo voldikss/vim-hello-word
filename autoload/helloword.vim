@@ -5,18 +5,36 @@
 " GitHub: https://github.com/voldikss
 " ========================================================================
 
-let g:words_db = {}
-let g:failed_words = []
-let g:passed_words = []
+let g:helloword_words = {}
+let g:helloword_failed_words = []
+let g:helloword_passed_words = []
 
 function! helloword#Start()
-  if !exists('g:lexicon_path') || !filereadable(g:lexicon_path)
-    echoerr "g:lexicon_path was not set. Set it in vimrc or use HelloWordLexicon command"
+  if !exists('g:helloword_lexicon_path')
+    echohl Error
+    echo "g:helloword_lexicon_path was not set. Set it in vimrc or use HelloWordSetLexicon command"
+    echohl None
     return
   endif
-  let f = readfile(g:lexicon_path)
-  let db = eval(join(f, ''))
-  let g:words_db = db
+
+  if !filereadable(expand(g:helloword_lexicon_path, ':p'))
+    echohl Error
+    echo "g:helloword_lexicon_path is invalid"
+    echohl None
+    return
+  endif
+
+  let g:helloword_lexicon_path = expand(g:helloword_lexicon_path, ':p')
+  try
+    let f = readfile(g:helloword_lexicon_path)
+    let db = eval(join(f, ''))
+  catch /.*/
+     echohl Error
+     echo "Error occurs while reading lexicon file"
+     echohl None
+   endtry
+
+  let g:helloword_words = db
 
   let patterns = [
     \ '选择题',
@@ -50,7 +68,7 @@ function! s:XuanZeTi(db)
   while 1
     let selected = words[helloword#util#random(max_words)]
     " if word was passed, we wont check it later
-    if index(g:passed_words, selected) >= 0
+    if index(g:helloword_passed_words, selected) >= 0
       continue
     endif
 
@@ -82,22 +100,20 @@ function! s:XuanZeTi(db)
 
     call helloword#util#shuffle(candidates)
 
-    let res = helloword#util#prompt(prompt, candidates)
+    let res = str2nr(helloword#util#prompt(prompt, candidates))
     if res == 0
       return
-    endif
-
-    if candidates[res-1] == answer
+    elseif res < 4 && candidates[res-1] == answer
       echohl MoreMsg
       echo "       ✔️ "
       echohl None
-      call add(g:passed_words, selected)
+      call add(g:helloword_passed_words, selected)
     else
       echohl WarningMsg
       echo "       ❌"
       echo "答案：" . answer
       echohl None
-      call add(g:failed_words, selected)
+      call add(g:helloword_failed_words, selected)
     endif
   endwhile
 endfunction
@@ -114,25 +130,25 @@ function! s:PinXieTi(db)
       echohl MoreMsg
       echo repeat(' ', 25-len(spell)) . "✔️ "
       echohl None
-      call add(g:passed_words, selected)
+      call add(g:helloword_passed_words, selected)
     else
       echohl WarningMsg
       echo repeat(' ', 25-len(spell)) . "❌"
       echo "答案：" . selected
       echohl None
-      call add(g:failed_words, selected)
+      call add(g:helloword_failed_words, selected)
     endif
   endwhile
 endfunction
 
 function! helloword#Export() abort
-  if exists('g:failed_words') && len(g:failed_words) > 0
+  if exists('g:failed_words') && len(g:helloword_failed_words) > 0
     tabnew helloword.json
     call append(0, '{')
-    for i in range(len(g:failed_words))
-      let word = g:failed_words[i]
-      let line = '  "'.word.'": '.'"'.g:words_db[word].'",'
-      if i != len(g:failed_words)-1
+    for i in range(len(g:helloword_failed_words))
+      let word = g:helloword_failed_words[i]
+      let line = '  "'.word.'": '.'"'.g:helloword_words[word].'",'
+      if i != len(g:helloword_failed_words)-1
         call append(line('$')-1, line)
       else
         call append(line('$')-1, line[:-2])
@@ -149,6 +165,6 @@ function! helloword#Export() abort
 endfunction
 
 function! helloword#setLexiconPath(path)
-  let g:lexicon_path = a:path
+  let g:helloword_lexicon_path = a:path
 endfunction
 
