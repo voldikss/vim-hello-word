@@ -1,6 +1,6 @@
 " ========================================================================
 " FileName: autoload/helloword.vim
-" Description: 
+" Description:
 " Author: voldikss
 " GitHub: https://github.com/voldikss
 " ========================================================================
@@ -32,7 +32,7 @@ function! helloword#Start()
      echohl Error
      echo "Error occurs while reading lexicon file"
      echohl None
-   endtry
+  endtry
 
   let g:helloword_words = db
 
@@ -40,7 +40,6 @@ function! helloword#Start()
     \ '选择题',
     \ '拼写题'
     \ ]
-  echo
   let pattern = helloword#util#prompt('选择考察形式：', patterns)
 
   if pattern == 0
@@ -54,48 +53,41 @@ endfunction
 
 function! s:XuanZeTi(db)
   let words = keys(a:db)
-  let max_words = len(words)
+  let words_count = len(words)
 
   let modes = [
     \ '英——>汉',
     \ '汉——>英'
     \ ]
-  let mode = helloword#util#prompt('选择模式：', modes)
+  let mode = str2nr(helloword#util#prompt('选择模式：', modes))
   if mode == 0
     return
   endif
 
   while 1
-    let selected = words[helloword#util#random(max_words)]
+    let chosen_word = words[helloword#util#random(words_count)]
     " if word was passed, we wont check it later
-    if index(g:helloword_passed_words, selected) >= 0
+    if index(g:helloword_passed_words, chosen_word) >= 0
       continue
     endif
 
-    let word_list = [selected]
-
+    let word_list = [chosen_word]
     while len(word_list) < 4
-      let random_num = helloword#util#random(max_words)
+      let random_num = helloword#util#random(words_count)
       let random_word = words[random_num]
-      if random_word != selected && index(word_list, random_word) < 0
+      if random_word != chosen_word && index(word_list, random_word) < 0
         call add(word_list, random_word)
       endif
     endwhile
 
     if mode == 1  " English -> Chinese
-      let prompt = selected
-      let answer = a:db[selected]
-      let candidates = []
-      for w in word_list
-        call add(candidates, a:db[w])
-      endfor
-    else
-      let prompt = a:db[selected]
-      let answer = selected
-      let candidates = []
-      for w in word_list
-        call add(candidates, w) " deep copy
-      endfor
+      let prompt = chosen_word
+      let answer = a:db[chosen_word]
+      let candidates = map(copy(word_list), {key,val -> a:db[val]})
+    else          " Chinese -> English
+      let prompt = a:db[chosen_word]
+      let answer = chosen_word
+      let candidates = copy(word_list)
     endif
 
     call helloword#util#shuffle(candidates)
@@ -103,17 +95,17 @@ function! s:XuanZeTi(db)
     let res = str2nr(helloword#util#prompt(prompt, candidates))
     if res == 0
       return
-    elseif res < 4 && candidates[res-1] == answer
+    elseif res <= 4 && candidates[res-1] == answer
       echohl MoreMsg
       echo "       ✔️ "
       echohl None
-      call add(g:helloword_passed_words, selected)
+      call add(g:helloword_passed_words, chosen_word)
     else
       echohl WarningMsg
       echo "       ❌"
       echo "答案：" . answer
       echohl None
-      call add(g:helloword_failed_words, selected)
+      call add(g:helloword_failed_words, chosen_word)
     endif
   endwhile
 endfunction
@@ -122,21 +114,20 @@ function! s:PinXieTi(db)
   let words = keys(a:db)
   let max_words = len(words)
   while 1
-    let selected = words[helloword#util#random(max_words)]
-    let spell = helloword#util#prompt(a:db[selected], [])
-    if trim(spell) == ''
+    let chosen_word = words[helloword#util#random(max_words)]
+    let spell = helloword#util#prompt(a:db[chosen_word], [])
+    if helloword#util#safeTrim(spell) == ''
       return
-    elseif trim(spell) == selected
+    elseif helloword#util#safeTrim(spell) == chosen_word
       echohl MoreMsg
       echo repeat(' ', 25-len(spell)) . "✔️ "
       echohl None
-      call add(g:helloword_passed_words, selected)
+      call add(g:helloword_passed_words, chosen_word)
     else
       echohl WarningMsg
       echo repeat(' ', 25-len(spell)) . "❌"
-      echo "答案：" . selected
-      echohl None
-      call add(g:helloword_failed_words, selected)
+      echo "答案：" . selectchosen_word      echohl None
+      call add(g:helloword_failed_words, chosen_word)
     endif
   endwhile
 endfunction
@@ -167,4 +158,3 @@ endfunction
 function! helloword#setLexiconPath(path)
   let g:helloword_lexicon_path = a:path
 endfunction
-

@@ -1,6 +1,6 @@
 " ========================================================================
 " FileName: autoload/helloword/util.vim
-" Description: 
+" Description:
 " Author: voldikss
 " GitHub: https://github.com/voldikss
 " ========================================================================
@@ -45,4 +45,8 @@ function! helloword#util#shuffle(list) abort
     endif
   endwhile
   return a:list
+endfunction
+
+function! helloword#util#safeTrim(text)
+  return substitute(a:text, "^\\s*\\(.\\{-}\\)\\(\\n\\|\\s\\)*$", '\1', '')
 endfunction
