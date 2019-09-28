@@ -7,4 +7,4 @@
 
 command! HelloWord call helloword#Start()
 command! HelloWordExport call helloword#Export()
-command! -nargs=* -complete=file HelloWordSetLexicon call helloword#setLexiconPath(<q-args>)
+command! -nargs=* -complete=file HelloWordSetVocabulary call helloword#setVocabularyPath(<q-args>)

@@ -10,27 +10,27 @@ let g:helloword_failed_words = []
 let g:helloword_passed_words = []
 
 function! helloword#Start()
-  if !exists('g:helloword_lexicon_path')
+  if !exists('g:helloword_vocabulary_path')
     echohl Error
-    echo "g:helloword_lexicon_path was not set. Set it in vimrc or use HelloWordSetLexicon command"
+    echo "g:helloword_vocabulary_path was not set. Set it in vimrc or use HelloWordSetvocabulary command"
     echohl None
     return
   endif
 
-  if !filereadable(expand(g:helloword_lexicon_path, ':p'))
+  if !filereadable(expand(g:helloword_vocabulary_path, ':p'))
     echohl Error
-    echo "g:helloword_lexicon_path is invalid"
+    echo "g:helloword_vocabulary_path is invalid"
     echohl None
     return
   endif
 
-  let g:helloword_lexicon_path = expand(g:helloword_lexicon_path, ':p')
+  let g:helloword_vocabulary_path = expand(g:helloword_vocabulary_path, ':p')
   try
-    let f = readfile(g:helloword_lexicon_path)
+    let f = readfile(g:helloword_vocabulary_path)
     let db = eval(join(f, ''))
   catch /.*/
      echohl Error
-     echo "Error occurs while reading lexicon file"
+     echo "Error occurs while reading vocabulary file"
      echohl None
   endtry
 
@@ -156,6 +156,6 @@ function! helloword#Export() abort
   endif
 endfunction
 
-function! helloword#setLexiconPath(path)
-  let g:helloword_lexicon_path = a:path
+function! helloword#setVocabularyPath(path)
+  let g:helloword_vocabulary_path = a:path
 endfunction

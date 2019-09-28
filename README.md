@@ -7,13 +7,13 @@
 - vim-plug
 
 ```vim
-Plug 'voldikss/vim-hello-word', {'on': ['HelloWord', ['HelloWordSetLexicon']]}
+Plug 'voldikss/vim-hello-word', {'on': ['HelloWord', ['HelloWordSetVocabulary']]}
 ```
 
 - dein.nvim
 
 ```vim
-call dein#add('voldikss/vim-hello-word', {'on_cmd': ['HelloWord', 'HelloWordSetLexicon']})
+call dein#add('voldikss/vim-hello-word', {'on_cmd': ['HelloWord', 'HelloWordSetVocabulary']})
 ```
 
 ## 特性
@@ -23,9 +23,9 @@ call dein#add('voldikss/vim-hello-word', {'on_cmd': ['HelloWord', 'HelloWordSetL
 
 ## 用法
 
-#### **`g:helloword_lexicon_path`**
+#### **`g:helloword_vocabulary_path`**
 
-词库文件的路径，也可以使用 `:HelloWordSetLexicon` 进行设置
+词库文件的路径，也可以使用 `:HelloWordSetVocabulary` 进行设置
 
 **注：词库的格式参照[CET6.json](./test/CET6.json)**
 
@@ -37,9 +37,9 @@ call dein#add('voldikss/vim-hello-word', {'on_cmd': ['HelloWord', 'HelloWordSetL
 
 导出答错的单词为 json 文件
 
-#### `:HelloWordSetLexicon`
+#### `:HelloWordSetVocabulary`
 
-设置词库的路径，可以使用 `<Tab>` 进行补全，也可以使用 `g:helloword_lexicon_path` 进行设置
+设置词库的路径，可以使用 `<Tab>` 进行补全，也可以使用 `g:helloword_vocabulary_path` 进行设置
 
 ## Screenshots
 
