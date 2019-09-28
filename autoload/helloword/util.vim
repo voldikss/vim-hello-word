@@ -5,6 +5,31 @@
 " GitHub: https://github.com/voldikss
 " ========================================================================
 
+function! helloword#util#showMessage(message, ...)
+  if a:0 == 0
+    let msgType = 'more'
+  else
+    let msgType = a:1
+  endif
+
+  if msgType == 'more'
+    echohl MoreMsg
+  elseif msgType == 'warning'
+    echohl WarningMsg
+  elseif msgType == 'error'
+    echohl ErrorMsg
+  endif
+
+  if type(a:message) != 1
+    let message = join(a:message, "\n")
+  else
+    let message = a:message
+  endif
+
+  echo message
+  echohl None
+endfunction
+
 function! helloword#util#prompt(prompt, candidates)
   echohl Title
   echo "\n==> " . a:prompt

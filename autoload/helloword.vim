@@ -9,16 +9,14 @@ let g:helloword_failed_words = {}
 
 function! helloword#Start()
   if !exists('g:helloword_vocabulary_path')
-    echohl Error
-    echo "g:helloword_vocabulary_path was not set. Set it in vimrc or use HelloWordSetvocabulary command"
-    echohl None
+    let message = "g:helloword_vocabulary_path was not set. Set it in vimrc or use HelloWordSetvocabulary command"
+    call helloword#util#showMessage(message, 'error')
     return
   endif
 
   if !filereadable(expand(g:helloword_vocabulary_path, ':p'))
-    echohl Error
-    echo "g:helloword_vocabulary_path is invalid"
-    echohl None
+    let message = "g:helloword_vocabulary_path is invalid"
+    call helloword#util#showMessage(message, 'error')
     return
   endif
 
@@ -27,9 +25,8 @@ function! helloword#Start()
     let f = readfile(g:helloword_vocabulary_path)
     let db = eval(join(f, ''))
   catch /.*/
-     echohl Error
-     echo "Error occurs while reading vocabulary file"
-     echohl None
+     let message = "Error occurs while reading vocabulary file"
+     call helloword#util#showMessage(message, 'error')
   endtry
 
   let patterns = [
@@ -88,15 +85,12 @@ function! s:XuanZeTi(db)
     if res == 0
       return
     elseif res <= 4 && candidates[res-1] == answer
-      echohl MoreMsg
-      echo repeat(' ', 25) . "✔️ "
-      echohl None
+      let message = repeat(' ', 25) . "✔️ "
+      call helloword#util#showMessage(message, 'more')
       call remove(vocabulary, choice)
     else
-      echohl WarningMsg
-      echo repeat(' ', 25) . "❌"
-      echo "答案：" . answer
-      echohl None
+      let message = [repeat(' ', 25) . "❌", "答案：" . answer]
+      call helloword#util#showMessage(message, 'warning')
       let g:helloword_failed_words[choice] = vocabulary[choice]
     endif
   endwhile
@@ -112,15 +106,12 @@ function! s:PinXieTi(db)
     if helloword#util#safeTrim(spell) == ''
       return
     elseif helloword#util#safeTrim(spell) == choice
-      echohl MoreMsg
-      echo repeat(' ', 25-len(spell)) . "✔️ "
-      echohl None
+      let message = repeat(' ', 25-len(spell)) . "✔️ "
+      call helloword#util#showMessage(message, 'more')
       call remove(vocabulary, choice)
     else
-      echohl WarningMsg
-      echo repeat(' ', 25-len(spell)) . "❌"
-      echo "答案：" . choice
-      echohl None
+      let message = [repeat(' ', 25-len(spell)) . "❌", "答案：" . choice]
+      call helloword#util#showMessage(message, 'warning')
       let g:helloword_failed_words[choice] = vocabulary[choice]
     endif
   endwhile
@@ -146,17 +137,15 @@ function! helloword#Export() abort
     normal dd
     normal gg
   else
-    echohl WarningMsg
-    echo "No words to export"
-    echohl None
+    let message = "No words to export"
+    call helloword#util#showMessage(message, 'warning')
   endif
 endfunction
 
 function! helloword#setVocabularyPath(path)
   if !filereadable(expand(a:path, ':p'))
-    echohl Error
-    echo "Vocabulary path is invalid"
-    echohl None
+    let message = "Vocabulary path is invalid"
+    call helloword#util#showMessage(message, 'warning')
     return
   endif
   let g:helloword_vocabulary_path = a:path
