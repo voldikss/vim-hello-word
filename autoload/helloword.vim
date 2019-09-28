@@ -5,9 +5,7 @@
 " GitHub: https://github.com/voldikss
 " ========================================================================
 
-let g:helloword_words = {}
-let g:helloword_failed_words = []
-let g:helloword_passed_words = []
+let g:helloword_failed_words = {}
 
 function! helloword#Start()
   if !exists('g:helloword_vocabulary_path')
@@ -34,8 +32,6 @@ function! helloword#Start()
      echohl None
   endtry
 
-  let g:helloword_words = db
-
   let patterns = [
     \ '选择题',
     \ '拼写题'
@@ -52,8 +48,7 @@ function! helloword#Start()
 endfunction
 
 function! s:XuanZeTi(db)
-  let words = keys(a:db)
-  let words_count = len(words)
+  let vocabulary = a:db
 
   let modes = [
     \ '英——>汉',
@@ -65,28 +60,25 @@ function! s:XuanZeTi(db)
   endif
 
   while 1
-    let chosen_word = words[helloword#util#random(words_count)]
-    " if word was passed, we wont check it later
-    if index(g:helloword_passed_words, chosen_word) >= 0
-      continue
-    endif
-
-    let word_list = [chosen_word]
+    let words = keys(vocabulary)
+    let count = len(words)
+    let choice = words[helloword#util#random(count)]
+    let word_list = [choice]
     while len(word_list) < 4
-      let random_num = helloword#util#random(words_count)
+      let random_num = helloword#util#random(count)
       let random_word = words[random_num]
-      if random_word != chosen_word && index(word_list, random_word) < 0
+      if random_word != choice && index(word_list, random_word) < 0
         call add(word_list, random_word)
       endif
     endwhile
 
     if mode == 1  " English -> Chinese
-      let prompt = chosen_word
-      let answer = a:db[chosen_word]
-      let candidates = map(copy(word_list), {key,val -> a:db[val]})
+      let prompt = choice
+      let answer = vocabulary[choice]
+      let candidates = map(copy(word_list), {key,val -> vocabulary[val]})
     else          " Chinese -> English
-      let prompt = a:db[chosen_word]
-      let answer = chosen_word
+      let prompt = vocabulary[choice]
+      let answer = choice
       let candidates = copy(word_list)
     endif
 
@@ -97,54 +89,58 @@ function! s:XuanZeTi(db)
       return
     elseif res <= 4 && candidates[res-1] == answer
       echohl MoreMsg
-      echo "       ✔️ "
+      echo repeat(' ', 25) . "✔️ "
       echohl None
-      call add(g:helloword_passed_words, chosen_word)
+      call remove(vocabulary, choice)
     else
       echohl WarningMsg
-      echo "       ❌"
+      echo repeat(' ', 25) . "❌"
       echo "答案：" . answer
       echohl None
-      call add(g:helloword_failed_words, chosen_word)
+      let g:helloword_failed_words[choice] = vocabulary[choice]
     endif
   endwhile
 endfunction
 
 function! s:PinXieTi(db)
-  let words = keys(a:db)
-  let max_words = len(words)
+  let vocabulary = a:db
   while 1
-    let chosen_word = words[helloword#util#random(max_words)]
-    let spell = helloword#util#prompt(a:db[chosen_word], [])
+    let words = keys(vocabulary)
+    let count = len(words)
+    let choice = words[helloword#util#random(count)]
+    let spell = helloword#util#prompt(vocabulary[choice], [])
     if helloword#util#safeTrim(spell) == ''
       return
-    elseif helloword#util#safeTrim(spell) == chosen_word
+    elseif helloword#util#safeTrim(spell) == choice
       echohl MoreMsg
       echo repeat(' ', 25-len(spell)) . "✔️ "
       echohl None
-      call add(g:helloword_passed_words, chosen_word)
+      call remove(vocabulary, choice)
     else
       echohl WarningMsg
       echo repeat(' ', 25-len(spell)) . "❌"
-      echo "答案：" . chosen_word      
+      echo "答案：" . choice
       echohl None
-      call add(g:helloword_failed_words, chosen_word)
+      let g:helloword_failed_words[choice] = vocabulary[choice]
     endif
   endwhile
 endfunction
 
 function! helloword#Export() abort
-  if exists('g:helloword_failed_words') && len(g:helloword_failed_words) > 0
+  let words = keys(g:helloword_failed_words)
+  let words_len = len(words)
+  if exists('g:helloword_failed_words') && words_len > 0
     tabnew helloword.json
     call append(0, '{')
-    for i in range(len(g:helloword_failed_words))
-      let word = g:helloword_failed_words[i]
-      let line = '  "'.word.'": '.'"'.g:helloword_words[word].'",'
-      if i != len(g:helloword_failed_words)-1
-        call append(line('$')-1, line)
+    let cnt = 0
+    for word in words
+      if cnt == words_len - 1
+        let line = '  "'.word.'": '.'"'.g:helloword_failed_words[word].'"'
       else
-        call append(line('$')-1, line[:-2])
+        let line = '  "'.word.'": '.'"'.g:helloword_failed_words[word].'",'
       endif
+      call append(line('$')-1, line)
+      let cnt += 1
     endfor
     call append(line('$')-1, '}')
     normal dd
@@ -157,5 +153,11 @@ function! helloword#Export() abort
 endfunction
 
 function! helloword#setVocabularyPath(path)
+  if !filereadable(expand(a:path, ':p'))
+    echohl Error
+    echo "Vocabulary path is invalid"
+    echohl None
+    return
+  endif
   let g:helloword_vocabulary_path = a:path
 endfunction
