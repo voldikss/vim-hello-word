@@ -59,6 +59,10 @@ function! s:XuanZeTi(db)
   while 1
     let words = keys(vocabulary)
     let count = len(words)
+    if count == 0
+      call helloword#util#showMessage('单词已背完', 'info')
+      return
+    endif
     let choice = words[helloword#util#random(count)]
     let word_list = [choice]
     while len(word_list) < 4
@@ -101,6 +105,10 @@ function! s:PinXieTi(db)
   while 1
     let words = keys(vocabulary)
     let count = len(words)
+    if count == 0
+      call helloword#util#showMessage('单词已背完', 'info')
+      return
+    endif
     let choice = words[helloword#util#random(count)]
     let spell = helloword#util#prompt(vocabulary[choice], [])
     if helloword#util#safeTrim(spell) == ''
