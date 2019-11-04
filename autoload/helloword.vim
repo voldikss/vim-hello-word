@@ -60,7 +60,7 @@ function! s:XuanZeTi(db)
     let words = keys(vocabulary)
     let count = len(words)
     if count == 0
-      call helloword#util#showMessage('单词已背完', 'info')
+      call helloword#util#showMessage('单词已背完', 'more')
       return
     endif
     let choice = words[helloword#util#random(count)]
@@ -106,7 +106,7 @@ function! s:PinXieTi(db)
     let words = keys(vocabulary)
     let count = len(words)
     if count == 0
-      call helloword#util#showMessage('单词已背完', 'info')
+      call helloword#util#showMessage('单词已背完', 'more')
       return
     endif
     let choice = words[helloword#util#random(count)]
