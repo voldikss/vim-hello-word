@@ -156,5 +156,5 @@ function! helloword#setVocabularyPath(path)
     call helloword#util#showMessage(message, 'warning')
     return
   endif
-  let g:helloword_vocabulary_path = a:path
+  let g:helloword_vocabulary_path = fnamemodify(a:path, ':p')
 endfunction
