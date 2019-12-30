@@ -7,16 +7,16 @@
 - vim-plug
 
 ```vim
-Plug 'voldikss/vim-hello-word', {'on': ['HelloWord', ['HelloWordSetVocabulary']]}
+Plug 'voldikss/vim-hello-word'
 ```
 
 - dein.nvim
 
 ```vim
-call dein#add('voldikss/vim-hello-word', {'on_cmd': ['HelloWord', 'HelloWordSetVocabulary']})
+call dein#add('voldikss/vim-hello-word')
 ```
 
-## 特性
+## 使用
 
 - 多模式出题(选择：英汉&汉英，拼写：汉英)
 - 可以导出答错的单词为 json 文件
@@ -44,13 +44,7 @@ call dein#add('voldikss/vim-hello-word', {'on_cmd': ['HelloWord', 'HelloWordSetV
 ## Screenshots
 
 <div align="center">
-	<img src="https://user-images.githubusercontent.com/20282795/62780836-2c9ace80-bae9-11e9-8ad5-4404c3032b67.png" width=800>
-</div>
-<div align="center">
-	<img src="https://user-images.githubusercontent.com/20282795/62780838-2c9ace80-bae9-11e9-932a-38d84de23ded.png" width=800>
-</div>
-<div align="center">
-	<img src="https://user-images.githubusercontent.com/20282795/62780839-2c9ace80-bae9-11e9-840f-2266e52c1298.png" width=800>
+	<img src="https://user-images.githubusercontent.com/20282795/71569902-2bf0ec00-2b0d-11ea-9131-175a312809f7.png" width=800>
 </div>
 <div align="center">
 	<img src="https://user-images.githubusercontent.com/20282795/62780478-58698480-bae8-11e9-9ba2-6cc3c35d75cc.png" width=800>

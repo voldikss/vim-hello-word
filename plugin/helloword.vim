@@ -1,10 +1,10 @@
 " ========================================================================
 " FileName: plugin/helloword.vim
-" Description: 
+" Description:
 " Author: voldikss
 " GitHub: https://github.com/voldikss
 " ========================================================================
 
-command! HelloWord call helloword#Start()
-command! HelloWordExport call helloword#Export()
-command! -nargs=* -complete=file HelloWordSetVocabulary call helloword#setVocabularyPath(<q-args>)
+command! HelloWord call helloword#start()
+command! HelloWordExport call helloword#export()
+command! -nargs=* -complete=file HelloWordSetVocabulary call helloword#set_vocabulary_path(<q-args>)

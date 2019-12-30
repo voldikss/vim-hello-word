@@ -5,62 +5,66 @@
 " GitHub: https://github.com/voldikss
 " ========================================================================
 
-let g:helloword_failed_words = {}
+let s:helloword_failed_words = {}
+let s:vacabulary = {}
+let s:problem_winid = 0
+let s:result_winid = 0
+let s:bar = '========================================================='
+let s:mode = 0
 
-function! helloword#Start()
+function! helloword#start() abort
   if !exists('g:helloword_vocabulary_path')
     let message = "g:helloword_vocabulary_path was not set. Set it in vimrc or use HelloWordSetvocabulary command"
-    call helloword#util#showMessage(message, 'error')
+    call helloword#util#show_msg(message, 'error')
     return
   endif
 
   if !filereadable(expand(g:helloword_vocabulary_path, ':p'))
     let message = "g:helloword_vocabulary_path is invalid"
-    call helloword#util#showMessage(message, 'error')
+    call helloword#util#show_msg(message, 'error')
     return
   endif
 
   let g:helloword_vocabulary_path = expand(g:helloword_vocabulary_path, ':p')
   try
     let f = readfile(g:helloword_vocabulary_path)
-    let db = eval(join(f, ''))
+    let s:vocabulary = eval(join(f, ''))
   catch /.*/
-     let message = "Error occurs while reading vocabulary file"
-     call helloword#util#showMessage(message, 'error')
+    let message = "Error occurs while reading vocabulary file"
+    call helloword#util#show_msg(message, 'error')
+    return
   endtry
 
-  let patterns = [
-    \ '选择题',
-    \ '拼写题'
-    \ ]
-  let pattern = helloword#util#prompt('选择考察形式：', patterns)
-
-  if pattern == 0
+  let s:mode = str2nr(input('1.拼写题 2.选择题(英——>汉) 3.选择题(汉——>英): '))
+  if index([1,2,3], s:mode) < 0
+    call helloword#util#show_msg('Incorrect selection', 'warning')
     return
-  elseif pattern == 1
-    call s:XuanZeTi(db)
+  endif
+
+  " Split window
+  tabnew helloword
+  noswapfile bo pedit!
+  enew
+  call helloword#util#buf_config()
+  let s:problem_winid = winnr()
+  wincmd p
+  call helloword#util#buf_config()
+  let s:result_winid = winnr()
+
+  " Start
+  if s:mode == 1
+    call s:pin_xie_ti()
   else
-    call s:PinXieTi(db)
+    call s:xuan_ze_ti()
   endif
 endfunction
 
-function! s:XuanZeTi(db)
-  let vocabulary = a:db
-
-  let modes = [
-    \ '英——>汉',
-    \ '汉——>英'
-    \ ]
-  let mode = str2nr(helloword#util#prompt('选择模式：', modes))
-  if mode == 0
-    return
-  endif
-
+function! s:xuan_ze_ti() abort
   while 1
-    let words = keys(vocabulary)
+    let words = keys(s:vocabulary)
     let count = len(words)
     if count == 0
-      call helloword#util#showMessage('单词已背完', 'more')
+      call helloword#util#show_msg('单词已背完', 'more')
       return
     endif
     let choice = words[helloword#util#random(count)]
@@ -73,70 +77,75 @@ function! s:XuanZeTi(db)
       endif
     endwhile
 
-    if mode == 1  " English -> Chinese
+    " Give the question
+    if s:mode == 2  " English -> Chinese
       let prompt = choice
-      let answer = vocabulary[choice]
-      let candidates = map(copy(word_list), {key,val -> vocabulary[val]})
+      let answer = s:vocabulary[choice]
+      let candidates = map(copy(word_list), {key,val -> s:vocabulary[val]})
     else          " Chinese -> English
-      let prompt = vocabulary[choice]
+      let prompt = s:vocabulary[choice]
       let answer = choice
       let candidates = copy(word_list)
     endif
 
     call helloword#util#shuffle(candidates)
+    let item = []
+    for i in range(len(candidates))
+      call add(item, i+1 . '. ' . candidates[i])
+    endfor
+    call helloword#util#display(s:problem_winid, [s:bar, prompt, ''] + item)
 
-    let res = str2nr(helloword#util#prompt(prompt, candidates))
-    if res == 0
+    " Check the answer
+    let ans = str2nr(input('Choose: '))
+    if ans == 0
       return
-    elseif res <= 4 && candidates[res-1] == answer
-      let message = repeat(' ', 25) . "✔️ "
-      call helloword#util#showMessage(message, 'more')
-      call remove(vocabulary, choice)
+    elseif ans <= 4 && candidates[ans-1] == answer
+      let message = "回答正确"
+      call remove(s:vocabulary, choice)
     else
-      let message = [repeat(' ', 25) . "❌", "答案：" . answer]
-      call helloword#util#showMessage(message, 'warning')
-      let g:helloword_failed_words[choice] = vocabulary[choice]
+      let message = "回答错误，答案是：" . answer
+      let s:helloword_failed_words[choice] = s:vocabulary[choice]
     endif
+    call helloword#util#display(s:result_winid, message)
   endwhile
 endfunction
 
-function! s:PinXieTi(db)
-  let vocabulary = a:db
+function! s:pin_xie_ti() abort
   while 1
-    let words = keys(vocabulary)
+    let words = keys(s:vocabulary)
     let count = len(words)
     if count == 0
-      call helloword#util#showMessage('单词已背完', 'more')
+      call helloword#util#show_msg('单词已背完', 'more')
       return
     endif
     let choice = words[helloword#util#random(count)]
-    let spell = helloword#util#prompt(vocabulary[choice], [])
-    if helloword#util#safeTrim(spell) == ''
+    call helloword#util#display(s:problem_winid, [s:bar, s:vocabulary[choice]])
+    let spell = input('Input answer: ')
+    if helloword#util#safe_trim(spell) == ''
       return
-    elseif helloword#util#safeTrim(spell) == choice
-      let message = repeat(' ', 25-len(spell)) . "✔️ "
-      call helloword#util#showMessage(message, 'more')
-      call remove(vocabulary, choice)
+    elseif helloword#util#safe_trim(spell) == choice
+      let message = "回答正确"
+      call remove(s:vocabulary, choice)
     else
-      let message = [repeat(' ', 25-len(spell)) . "❌", "答案：" . choice]
-      call helloword#util#showMessage(message, 'warning')
-      let g:helloword_failed_words[choice] = vocabulary[choice]
+      let message = "回答错误：" . choice
+      let s:helloword_failed_words[choice] = s:vocabulary[choice]
     endif
+    call helloword#util#display(s:result_winid, message)
   endwhile
 endfunction
 
-function! helloword#Export() abort
-  let words = keys(g:helloword_failed_words)
+function! helloword#export() abort
+  let words = keys(s:helloword_failed_words)
   let words_len = len(words)
-  if exists('g:helloword_failed_words') && words_len > 0
+  if exists('s:helloword_failed_words') && words_len > 0
     tabnew helloword.json
     call append(0, '{')
     let cnt = 0
     for word in words
       if cnt == words_len - 1
-        let line = '  "'.word.'": '.'"'.g:helloword_failed_words[word].'"'
+        let line = '  "'.word.'": '.'"'.s:helloword_failed_words[word].'"'
       else
-        let line = '  "'.word.'": '.'"'.g:helloword_failed_words[word].'",'
+        let line = '  "'.word.'": '.'"'.s:helloword_failed_words[word].'",'
       endif
       call append(line('$')-1, line)
       let cnt += 1
@@ -146,14 +155,14 @@ function! helloword#Export() abort
     normal gg
   else
     let message = "No words to export"
-    call helloword#util#showMessage(message, 'warning')
+    call helloword#util#show_msg(message, 'warning')
   endif
 endfunction
 
-function! helloword#setVocabularyPath(path)
+function! helloword#set_vocabulary_path(path)
   if !filereadable(expand(a:path, ':p'))
     let message = "Vocabulary path is invalid"
-    call helloword#util#showMessage(message, 'warning')
+    call helloword#util#show_msg(message, 'warning')
     return
   endif
   let g:helloword_vocabulary_path = fnamemodify(a:path, ':p')
